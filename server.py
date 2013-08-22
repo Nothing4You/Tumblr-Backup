@@ -343,7 +343,7 @@ class TumblrDownloader(object):
     def done(self):
         self.publish("Compressing")
         try:
-            code = yield getProcessValue("/bin/tar", ["-cf", safe_format("./tmp/{}.tar", self.url), "-C", "./tmp/", self.url], os.environ, ".")
+            code = yield getProcessValue("/bin/tar", ["-cJf", safe_format("./tmp/{}.tar.xz", self.url), "-C", "./tmp/", self.url], os.environ, ".")
         except:
             self.publish("Failed to compress archive", True)
             shutil.rmtree(self.folder)
@@ -353,8 +353,8 @@ class TumblrDownloader(object):
     def cleanup(self):
         self.publish("Finished")
         shutil.rmtree(self.folder)
-        os.rename(safe_format("./tmp/{}.tar",self.url), safe_format("./archives/{}.tar",self.url))
-        os.chmod(safe_format("./archives/{}.tar",self.url), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+        os.rename(safe_format("./tmp/{}.tar.xz",self.url), safe_format("./archives/{}.tar.xz",self.url))
+        os.chmod(safe_format("./archives/{}.tar.xz",self.url), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
         self.finished.callback(self.url)
 
 class TumblrUser(Protocol):
@@ -374,7 +374,7 @@ class TumblrUser(Protocol):
                 url = "//"+url
             url = urlparse.urlparse(url).hostname
             print url
-            if os.path.exists(safe_format("./archives/{}.tar", url)):
+            if os.path.exists(safe_format("./archives/{}.tar.xz", url)):
                 return self.done(url)
             self.channel = url
             self.factory.download(url, self)
@@ -403,7 +403,7 @@ class TumblrUser(Protocol):
         if self.channel:
             self.factory.unsubscribe(self, self.channel)
             self.channel = None
-        self.transport.write(json.dumps({"archive":safe_format("archives/{}.tar", url)}))
+        self.transport.write(json.dumps({"archive":safe_format("archives/{}.tar.xz", url)}))
         self.transport.loseConnection()
         return url
     
